@@ -890,7 +890,7 @@
           <div>PLAYER: <span id="finalPlayer">-</span></div>
           <div>YOUR SCORE: <span id="finalScore">0</span></div>
         </div>
-        <div class="helper">ONLY TOP 5 SCORES ARE STORED. LOWER SCORES ARE DELETED AND NOT SAVED.</div>
+        <div class="helper">ONLY TOP 5 SCORES ARE STORED.</div>
         <button id="playAgainButton" class="pixel-btn" type="button">&rsaquo; PLAY AGAIN &lsaquo;</button>
       </div>
       <div class="footer">
@@ -942,8 +942,9 @@
 
     const STORAGE_KEY = 'arrowmaniaTop5';
     const MAX_MISSES = 4;
-    const PERFECT_WINDOW = 84;
-    const GOOD_WINDOW = 144;
+    const IS_MOBILE_INPUT = /iPhone|iPod|Android|Mobile|iPad/i.test(navigator.userAgent || '') || ((navigator.maxTouchPoints || 0) > 0 && window.innerWidth <= 1024) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    const PERFECT_WINDOW = IS_MOBILE_INPUT ? 58 : 84;
+    const GOOD_WINDOW = IS_MOBILE_INPUT ? 104 : 144;
 
     let username = '';
     let score = 0;
