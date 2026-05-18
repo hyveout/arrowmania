@@ -122,6 +122,20 @@
       box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000;
       transform: translateY(-2px);
     }
+    .score-chip {
+      display: inline-block;
+      min-width: 92px;
+      margin-left: 10px;
+      padding: 6px 10px 5px;
+      background: var(--red);
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000;
+      transform: translateY(-2px);
+    }
+    .score-chip.player-chip {
+      background: var(--blue);
+    }
     .prompt {
       margin-top: 22px;
       color: var(--blue);
@@ -380,6 +394,24 @@
       35% { transform: translateX(-50%) scale(1.16); }
       100% { transform: translateX(-50%) scale(1); }
     }
+    @keyframes feedbackFade {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -44%) scale(0.96);
+      }
+      18% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      72% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -56%) scale(1.02);
+      }
+    }
     @keyframes hitFlash {
       0% {
         background: rgba(255, 226, 102, 0.30);
@@ -504,12 +536,7 @@
     .lane.l3 { left: 75%; }
 
     .hit-line {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 112px;
-      height: 8px;
-      background: #000;
+      display: none;
     }
     .targets {
       position: absolute;
@@ -529,7 +556,7 @@
       display: grid;
       place-items: center;
       background: rgba(255,255,255,0.34);
-      border: 4px solid rgba(0,0,0,0.82);
+      border: 6px solid rgba(0,0,0,0.92);
       box-shadow: inset 0 0 0 4px rgba(255,255,255,0.24);
       clip-path: polygon(10% 0, 90% 0, 90% 10%, 100% 10%, 100% 90%, 90% 90%, 90% 100%, 10% 100%, 10% 90%, 0 90%, 0 10%, 10% 10%);
       image-rendering: pixelated;
@@ -546,12 +573,7 @@
       animation: hitFlash 0.28s steps(4, end);
     }
     .target-box::before {
-      content: "";
-      position: absolute;
-      inset: 10px;
-      border: 4px solid rgba(0,0,0,0.22);
-      clip-path: polygon(10% 0, 90% 0, 90% 10%, 100% 10%, 100% 90%, 90% 90%, 90% 100%, 10% 100%, 10% 90%, 0 90%, 0 10%, 10% 10%);
-      pointer-events: none;
+      content: none;
     }
     .target-box img {
       width: 88%;
@@ -599,6 +621,10 @@
       pointer-events: none;
       z-index: 6;
       text-shadow: 4px 4px 0 #000;
+      opacity: 0;
+    }
+    .feedback.show {
+      animation: feedbackFade 0.42s ease-out;
     }
     .feedback.perfect { color: #18c926; }
     .feedback.good { color: #2495ff; }
@@ -779,23 +805,13 @@
         margin-top: 16px;
       }
       .lane::after {
-        content: "";
-        position: absolute;
-        left: 4px;
-        right: 4px;
-        bottom: 0;
-        height: 148px;
-        background: rgba(255,255,255,0.12);
-        border: 2px solid rgba(0,0,0,0.14);
-        clip-path: polygon(10% 0, 90% 0, 90% 10%, 100% 10%, 100% 90%, 90% 90%, 90% 100%, 10% 100%, 10% 90%, 0 90%, 0 10%, 10% 10%);
-        pointer-events: none;
+        content: none;
       }
       .hit-line {
-        bottom: 116px;
-        height: 7px;
+        display: none;
       }
       .targets {
-        bottom: 16px;
+        bottom: 28px;
       }
       .target-box {
         width: min(22vw, 92px);
@@ -887,8 +903,8 @@
           <tbody id="scoresBody"></tbody>
         </table>
         <div class="summary">
-          <div>PLAYER: <span id="finalPlayer">-</span></div>
-          <div>YOUR SCORE: <span id="finalScore">0</span></div>
+          <div>PLAYER: <span id="finalPlayer" class="score-chip player-chip">-</span></div>
+          <div>YOUR SCORE: <span id="finalScore" class="score-chip">0</span></div>
         </div>
         <div class="helper">ONLY TOP 5 SCORES ARE STORED.</div>
         <button id="playAgainButton" class="pixel-btn" type="button">&rsaquo; PLAY AGAIN &lsaquo;</button>
@@ -943,8 +959,8 @@
     const STORAGE_KEY = 'arrowmaniaTop5';
     const MAX_MISSES = 4;
     const IS_MOBILE_INPUT = /iPhone|iPod|Android|Mobile|iPad/i.test(navigator.userAgent || '') || ((navigator.maxTouchPoints || 0) > 0 && window.innerWidth <= 1024) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-    const PERFECT_WINDOW = IS_MOBILE_INPUT ? 58 : 84;
-    const GOOD_WINDOW = IS_MOBILE_INPUT ? 104 : 144;
+    const PERFECT_WINDOW = IS_MOBILE_INPUT ? 28 : 52;
+    const GOOD_WINDOW = IS_MOBILE_INPUT ? 52 : 92;
 
     let username = '';
     let score = 0;
@@ -1058,6 +1074,15 @@
       setTimeout(() => scoreNumber.classList.remove('pop'), 240);
     }
 
+    function showFeedbackMessage(label, kind) {
+      feedback.textContent = label;
+      feedback.className = 'feedback ' + kind;
+      feedback.style.animation = 'none';
+      void feedback.offsetWidth;
+      feedback.style.animation = '';
+      feedback.classList.add('show');
+    }
+
     function flashScoringTarget(key) {
       const target = targets[key];
       if (!target) return;
@@ -1072,15 +1097,13 @@
       scoreNumber.textContent = String(score);
       pulseScoreBoard();
       flashScoringTarget(key);
-      feedback.textContent = kind === 'perfect' ? 'PERFECT' : 'GOOD';
-      feedback.className = 'feedback ' + kind;
+      showFeedbackMessage(kind === 'perfect' ? 'PERFECT' : 'GOOD', kind);
     }
 
     function registerMiss() {
       misses -= 1;
       missesLeft.textContent = String(Math.max(0, misses));
-      feedback.textContent = 'MISS';
-      feedback.className = 'feedback miss';
+      showFeedbackMessage('MISS', 'miss');
       const pct = Math.max(0, (misses / MAX_MISSES) * 100);
       lifeFill.style.width = pct + '%';
       lifeFill.style.background = pct <= 25 ? '#ff4a4a' : pct <= 50 ? '#ffbb39' : 'var(--green)';
