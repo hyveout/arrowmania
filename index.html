@@ -588,12 +588,15 @@
     .note {
       position: absolute;
       pointer-events: none;
+      top: 0;
       left: 50%;
-      transform: translateX(-50%);
+      --note-y: -120px;
+      transform: translate(-50%, var(--note-y));
       width: clamp(90px, 8.6vw, 118px);
       height: clamp(90px, 8.6vw, 118px);
       display: grid;
       place-items: center;
+      will-change: transform;
     }
     .note img {
       width: 92%;
@@ -609,10 +612,24 @@
     .rot-up { transform: rotate(180deg); }
     .rot-right { transform: rotate(-90deg); }
 
+    #targetDown img,
+    .note img.dir-down {
+      width: 76%;
+      height: 76%;
+      transform: translateY(1px);
+    }
+
+    #targetUp img,
+    .note img.dir-up {
+      width: 76%;
+      height: 76%;
+      transform: translateY(-1px) rotate(180deg);
+    }
+
     .feedback {
       position: absolute;
       left: 50%;
-      top: 50%;
+      top: 46%;
       transform: translate(-50%, -50%);
       min-height: 14px;
       font-size: clamp(20px, 2vw, 34px);
@@ -951,8 +968,8 @@
 
     const lanes = {
       ArrowLeft: { index: 0, asset: ARROW_ASSETS.red, cls: 'rot-left' },
-      ArrowDown: { index: 1, asset: ARROW_ASSETS.blue, cls: '' },
-      ArrowUp: { index: 2, asset: ARROW_ASSETS.red, cls: 'rot-up' },
+      ArrowDown: { index: 1, asset: ARROW_ASSETS.blue, cls: 'dir-down' },
+      ArrowUp: { index: 2, asset: ARROW_ASSETS.red, cls: 'dir-up rot-up' },
       ArrowRight: { index: 3, asset: ARROW_ASSETS.blue, cls: 'rot-right' }
     };
 
@@ -961,6 +978,9 @@
     const IS_MOBILE_INPUT = /iPhone|iPod|Android|Mobile|iPad/i.test(navigator.userAgent || '') || ((navigator.maxTouchPoints || 0) > 0 && window.innerWidth <= 1024) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
     const PERFECT_WINDOW = IS_MOBILE_INPUT ? 28 : 52;
     const GOOD_WINDOW = IS_MOBILE_INPUT ? 52 : 92;
+    const BASE_SPEED_LEVEL = 5;
+    const BASE_SPAWN_DELAY = 620;
+    const BASE_NOTE_TRAVEL_TIME = 1740;
 
     let username = '';
     let score = 0;
@@ -970,8 +990,8 @@
     let spawnTimer = null;
     let animationFrame = null;
     let startedAt = 0;
-    let spawnDelay = 1200;
-    let noteTravelTime = 2800;
+    let spawnDelay = BASE_SPAWN_DELAY;
+    let noteTravelTime = BASE_NOTE_TRAVEL_TIME;
 
     function showScreen(screen) {
       [startScreen, gameScreen, scoreScreen].forEach(el => el.classList.remove('active'));
@@ -989,12 +1009,12 @@
       notes = [];
       score = 0;
       misses = MAX_MISSES;
-      spawnDelay = 1200;
-      noteTravelTime = 2800;
+      spawnDelay = BASE_SPAWN_DELAY;
+      noteTravelTime = BASE_NOTE_TRAVEL_TIME;
       startedAt = performance.now();
       scoreNumber.textContent = '0';
       missesLeft.textContent = '4';
-      speedLevel.textContent = '1';
+      speedLevel.textContent = String(BASE_SPEED_LEVEL);
       feedback.textContent = '';
       feedback.className = 'feedback';
       lifeFill.style.width = '100%';
@@ -1027,9 +1047,9 @@
     function scheduleSpawn() {
       if (!gameActive) return;
       const elapsed = performance.now() - startedAt;
-      spawnDelay = Math.max(340, 1200 - elapsed / 19);
-      noteTravelTime = Math.max(1250, 2800 - elapsed / 11);
-      speedLevel.textContent = String(1 + Math.floor((1200 - spawnDelay) / 135));
+      spawnDelay = Math.max(390, BASE_SPAWN_DELAY - elapsed / 24);
+      noteTravelTime = Math.max(1160, BASE_NOTE_TRAVEL_TIME - elapsed / 14);
+      speedLevel.textContent = String(BASE_SPEED_LEVEL + Math.floor((BASE_SPAWN_DELAY - spawnDelay) / 60));
       spawnTimer = setTimeout(() => {
         spawnNote();
         scheduleSpawn();
@@ -1040,13 +1060,13 @@
       const keys = Object.keys(lanes);
       const key = keys[Math.floor(Math.random() * keys.length)];
       const lane = lanes[key];
-      const laneEl = playfield.querySelector('.lane.l' + lane.index);
+      const laneEl = laneElements[lane.index];
       const note = document.createElement('div');
       note.className = 'note';
-      note.style.top = '-120px';
+      note.style.setProperty('--note-y', '-120px');
       note.innerHTML = `<img class="${lane.cls}" src="${lane.asset}" alt="falling arrow png">`;
       laneEl.appendChild(note);
-      notes.push({ key, el: note, spawnTime: performance.now(), judged: false });
+      notes.push({ key, el: note, spawnTime: performance.now(), judged: false, y: -120 });
     }
 
     function updateGame(now) {
@@ -1056,7 +1076,8 @@
         const note = notes[i];
         const progress = (now - note.spawnTime) / noteTravelTime;
         const y = -120 + (hitY + 120) * progress;
-        note.el.style.top = y + 'px';
+        note.y = y;
+        note.el.style.setProperty('--note-y', y + 'px');
         if (!note.judged && progress > 1.08) {
           note.judged = true;
           note.el.remove();
@@ -1115,10 +1136,7 @@
       const candidates = notes
         .map((note, index) => ({ note, index }))
         .filter(item => item.note.key === key && !item.note.judged)
-        .map(item => {
-          const y = parseFloat(item.note.el.style.top || '-120');
-          return { ...item, distance: Math.abs(y - hitY) };
-        })
+        .map(item => ({ ...item, distance: Math.abs((item.note.y ?? -120) - hitY) }))
         .sort((a, b) => a.distance - b.distance);
 
       if (!candidates.length) {
