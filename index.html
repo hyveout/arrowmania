@@ -45,6 +45,43 @@
       max-height: 760px;
       background: #fff;
       overflow: hidden;
+      --frame-inset: 8px;
+      --frame-thickness: 8px;
+    }
+    .app::before,
+    .app::after {
+      content: '';
+      position: absolute;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .app::before {
+      inset: var(--frame-inset);
+      background:
+        linear-gradient(var(--red), var(--red)) left top / 100% var(--frame-thickness) no-repeat,
+        linear-gradient(var(--red), var(--red)) left top / var(--frame-thickness) 100% no-repeat;
+      opacity: 0.92;
+      filter: drop-shadow(0 0 1px rgba(255,58,43,0.24));
+      animation: siteFrameRedShift 4.8s ease-in-out infinite;
+    }
+    .app::after {
+      inset: var(--frame-inset);
+      background:
+        linear-gradient(var(--blue), var(--blue)) right top / var(--frame-thickness) 100% no-repeat,
+        linear-gradient(var(--blue), var(--blue)) left bottom / 100% var(--frame-thickness) no-repeat;
+      opacity: 0.82;
+      filter: drop-shadow(0 0 1px rgba(114,207,255,0.24));
+      animation: siteFrameBlueShift 4.8s ease-in-out infinite reverse;
+    }
+    @keyframes siteFrameRedShift {
+      0%, 100% { transform: translate(0, 0) skewX(0deg); }
+      35% { transform: translate(2px, -1px) skewX(-0.35deg); }
+      68% { transform: translate(-1px, 1px) skewX(0.25deg); }
+    }
+    @keyframes siteFrameBlueShift {
+      0%, 100% { transform: translate(0, 0) skewY(0deg); }
+      40% { transform: translate(2px, 1px) skewY(0.25deg); }
+      72% { transform: translate(-2px, -1px) skewY(-0.25deg); }
     }
 
     .screen {
@@ -59,14 +96,14 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 32px 20px;
+      padding: 32px 20px 118px;
     }
     body:not([data-ui-ready="1"]) #startScreen {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 32px 20px;
+      padding: 32px 20px 118px;
     }
     body:not([data-ui-ready="1"]) #gameScreen,
     body:not([data-ui-ready="1"]) #scoreScreen {
@@ -86,6 +123,8 @@
 
     .logo {
       width: min(390px, 72vw);
+      margin-top: -14px;
+      margin-left: 10px;
       image-rendering: pixelated;
       filter: drop-shadow(6px 6px 0 #000);
       animation: logoArcadeGlitch 1.18s steps(2, end) infinite, crtFlicker 1.65s steps(2, end) infinite;
@@ -433,7 +472,7 @@
     .footer {
       position: absolute;
       left: 50%;
-      bottom: 6px;
+      bottom: 24px;
       transform: translateX(-50%);
       display: flex;
       flex-direction: column;
@@ -443,11 +482,11 @@
       z-index: 3;
     }
     #startScreen .footer, #scoreScreen .footer {
-      position: static;
-      left: auto;
-      bottom: auto;
-      transform: none;
-      margin-top: 32px;
+      position: absolute;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      margin-top: 0;
     }
     .footer img { width: 48px; height: 48px; image-rendering: pixelated; filter: drop-shadow(4px 4px 0 #000); }
     .copyright {
@@ -465,7 +504,7 @@
       inset: 0;
       max-width: 980px;
       margin: 0 auto;
-      padding: 52px 78px 78px;
+      padding: 52px 78px 110px;
     }
     .game-top {
       position: relative;
@@ -576,8 +615,8 @@
       content: none;
     }
     .target-box img {
-      width: 88%;
-      height: 88%;
+      width: 78%;
+      height: 78%;
       object-fit: contain;
       image-rendering: pixelated;
       display: block;
@@ -599,9 +638,9 @@
       will-change: transform;
     }
     .note img {
-      width: 92%;
+      width: 78%;
       pointer-events: none;
-      height: 92%;
+      height: 78%;
       object-fit: contain;
       image-rendering: pixelated;
       display: block;
@@ -612,24 +651,10 @@
     .rot-up { transform: rotate(180deg); }
     .rot-right { transform: rotate(-90deg); }
 
-    #targetDown img,
-    .note img.dir-down {
-      width: 76%;
-      height: 76%;
-      transform: translateY(1px);
-    }
-
-    #targetUp img,
-    .note img.dir-up {
-      width: 76%;
-      height: 76%;
-      transform: translateY(-1px) rotate(180deg);
-    }
-
     .feedback {
       position: absolute;
       left: 50%;
-      top: 46%;
+      top: 44%;
       transform: translate(-50%, -50%);
       min-height: 14px;
       font-size: clamp(20px, 2vw, 34px);
@@ -657,6 +682,8 @@
       align-items: center;
     }
     .score-title {
+      margin-top: 8px;
+      margin-bottom: 10px;
       font-size: clamp(18px, 1.65vw, 26px);
       text-transform: uppercase;
       color: #fff;
@@ -675,7 +702,8 @@
       filter: drop-shadow(0 0 1px rgba(255,255,255,0.8)) drop-shadow(0 0 8px rgba(114,207,255,0.22));
     }
     table.scores {
-      margin-top: 14px;
+      margin-top: 18px;
+      margin-bottom: 34px;
       border-collapse: collapse;
       text-transform: uppercase;
       font-size: clamp(10px, 0.95vw, 14px);
@@ -688,7 +716,8 @@
     table.scores th:nth-child(1), table.scores td.rank { color: var(--red); }
     table.scores th:nth-child(2), table.scores td.score { color: var(--blue); }
     .summary {
-      margin-top: 20px;
+      margin-top: 0;
+      margin-bottom: 34px;
       font-size: clamp(10px, 0.95vw, 14px);
       line-height: 1.8;
       text-transform: uppercase;
@@ -747,7 +776,7 @@
         animation-delay: calc(var(--char-index) * 16ms);
       }
     }
-    .score-wrap .pixel-btn { margin-top: 26px; padding-left: 26px; padding-right: 26px; }
+    .score-wrap .pixel-btn { margin-top: 34px; padding-left: 26px; padding-right: 26px; }
 
     @media (min-width: 1200px) {
       .app { width: min(100vw, 1400px); }
@@ -764,15 +793,19 @@
         width: 100vw;
         height: 100dvh;
         max-height: none;
+        --frame-inset: 6px;
+        --frame-thickness: 5px;
       }
       #startScreen.active, #scoreScreen.active {
-        padding: 18px 14px 22px;
+        padding: 18px 14px 116px;
       }
       .center-stack {
         width: min(92vw, 420px);
       }
       .logo {
         width: min(320px, 82vw);
+        margin-top: -18px;
+        margin-left: 8px;
       }
       .promo {
         font-size: clamp(16px, 4.8vw, 21px);
@@ -786,7 +819,7 @@
         font-size: 16px;
       }
       .footer {
-        bottom: 8px;
+        bottom: 22px;
         gap: 6px;
       }
       .footer img {
@@ -803,7 +836,7 @@
         inset: 0;
         max-width: none;
         margin: 0 auto;
-        padding: 16px 10px 118px;
+        padding: 16px 10px 150px;
       }
       .life-bar {
         height: 18px;
@@ -843,6 +876,7 @@
         height: min(21vw, 88px);
       }
       .feedback {
+        top: 42%;
         font-size: clamp(18px, 7vw, 28px);
       }
       .score-wrap {
@@ -912,6 +946,10 @@
 
     <section id="scoreScreen" class="screen">
       <div class="score-wrap">
+        <div class="summary">
+          <div>PLAYER: <span id="finalPlayer" class="score-chip player-chip">-</span></div>
+          <div>YOUR SCORE: <span id="finalScore" class="score-chip">0</span></div>
+        </div>
         <div class="score-title">HIGH SCORES</div>
         <table class="scores" aria-label="High scores">
           <thead>
@@ -919,11 +957,6 @@
           </thead>
           <tbody id="scoresBody"></tbody>
         </table>
-        <div class="summary">
-          <div>PLAYER: <span id="finalPlayer" class="score-chip player-chip">-</span></div>
-          <div>YOUR SCORE: <span id="finalScore" class="score-chip">0</span></div>
-        </div>
-        <div class="helper">ONLY TOP 5 SCORES ARE STORED.</div>
         <button id="playAgainButton" class="pixel-btn" type="button">&rsaquo; PLAY AGAIN &lsaquo;</button>
       </div>
       <div class="footer">
